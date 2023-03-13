@@ -37,7 +37,7 @@ class ExcelInterface:
                 The name of the excel file to export
         """
         try:
-            self.__inventory.to_excel(output_filename, index = False)
+            self.__inventory.to_excel(output_filename)
 
         except Exception as e:
             print(e)
