@@ -27,7 +27,7 @@ class ExcelInterface:
         except Exception as e:
             print(e)
 
-    def export_inventory(self, output_filename):
+    def export_inventory(self, output_filename, external_inventory=None):
         """ Exports an excel file from a dataframe and assigns a name to the file
             If there is an error writing the file, an Exception is thrown.
 
@@ -35,9 +35,16 @@ class ExcelInterface:
             __________
             output_filename : str
                 The name of the excel file to export
+            inventory (optional): Dataframe
+                External inventory to make the exporting process directly
+                without using the set_inventory method
         """
         try:
-            self.__inventory.to_excel(output_filename)
+            if(external_inventory is None):
+                self.__inventory.to_excel(output_filename)
+            else:
+                self.set_inventory(external_inventory)
+                external_inventory.to_excel(output_filename)
 
         except Exception as e:
             print(e)
