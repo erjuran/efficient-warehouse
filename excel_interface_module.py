@@ -48,7 +48,33 @@ class ExcelInterface:
 
         except Exception as e:
             print(e)
-    
+
+    def export_multiple_inventories(self, output_filename, external_inventories, sheet_names):
+        """ Exports an excel file from multiple dataframe and assigns a name to the file and every sheet
+            If there is an error writing the file, an Exception is thrown.
+
+            Parameters
+            __________
+            output_filename : str
+                The name of the excel file to export
+            external_inventories: list
+                External inventories coming as dataframes
+            sheet_names: list
+                Names for each sheet created from a dataframe
+        """
+
+        try:
+            num_invs = len(external_inventories)
+            if(num_invs > 0 and num_invs == len(sheet_names)):
+                with pd.ExcelWriter(output_filename) as writer:
+                    for i in range(0, num_invs):
+                        external_inventories[i].to_excel(writer, sheet_name=sheet_names[i], index=False)
+            else:
+                raise Exception("Invalid inputs")
+
+        except Exception as e:
+            print(e)
+
     def get_inventory(self):
         """Return the dataframe object that contains the inventory data"""
         return self.__inventory
