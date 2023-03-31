@@ -20,3 +20,5 @@ class InventorySorter:
     def sort_by_days(self):
         sorted_inventory = self.inventory.sort_values(['Días de almacenamiento '])
         return sorted_inventory
+    
+    

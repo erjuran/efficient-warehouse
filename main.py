@@ -1,5 +1,5 @@
-from excel_interface_module import ExcelInterface
-from sort_inventory_module import InventorySorter
+from modules.excel_interface_module import ExcelInterface
+from modules.sort_inventory_module import InventorySorter
 
 
 if __name__ == '__main__':
