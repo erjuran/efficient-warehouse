@@ -1,9 +1,10 @@
 import pandas as pd
+import itertools
 
 class InventorySorter:
     """
     """
-    sort_types = ['GROUP','DAYS']
+    sort_types = ['GROUP','DAYS','SLOTS']
 
     @staticmethod
     def sort_by_group(external_inventory):
@@ -33,6 +34,8 @@ class InventorySorter:
                     method = InventorySorter.sort_by_group
                 case "DAYS":
                     method = InventorySorter.sort_by_days
+                case "SLOTS":
+                    method = InventorySorter.optimize_slots
                 case _:
                     # Default case
                     method = InventorySorter.sort_by_group
@@ -44,16 +47,73 @@ class InventorySorter:
         
 
     @staticmethod
-    def sort_by_all_types(external_inventory):
+    def sort_by_all_types(external_inventory, warehouse):
         """
         """
         sorting_methods, sorting_tags = InventorySorter._get_sorting_methods()
 
-        return [method(external_inventory) for method in sorting_methods], sorting_tags
+        sorted_invs = []
+
+        # For the slot sorting, the inventory sorted by days is the input
+        sorted_by_days_inv = None
+        sorted_inv = None
+
+        for i in range(len(sorting_methods)):
+
+            if(sorting_tags[i] == 'DAYS'):
+                sorted_inv = sorting_methods[i](external_inventory)
+                sorted_by_days_inv = sorted_inv
+
+            elif(sorting_tags[i] == 'SLOTS'):
+                sorted_inv = sorting_methods[i](sorted_by_days_inv.copy(), warehouse)
+
+            else:
+                sorted_inv = sorting_methods[i](external_inventory)
+            
+            sorted_invs.append(sorted_inv)
+
+        return sorted_invs, sorting_tags
     
 
     @staticmethod
-    def optimize_slots(sorted_inventory, warehouse_dimensions):
+    def _compare_slot_size(slot, equip_summary, index, sorted_inventory, located_equips, empty_slot = True):
+        # 1. Check if the equipment fits in closest empty slot in group A or B
+        
+        located = False
+        
+        slot_summary = {
+            "DIVISION" : slot['DIVISION'],
+            "CARRIL": slot['CARRIL']
+        }
+
+        equip_len = equip_summary['LARGO']
+        condition = (len(slot['EQUIPOS']) == 0) if empty_slot else (len(slot['EQUIPOS']) != 0)
+
+        if(empty_slot):
+            condition = (len(slot['EQUIPOS']) == 0)
+            available_space = slot['LONGITUD']
+        else:
+            condition = (len(slot['EQUIPOS']) != 0)
+            available_space = 0
+            # Calculate the remaining space in a non-empty slot
+            for stored_equip in slot['EQUIPOS']:
+                available_space += stored_equip['LARGO']
+            
+            available_space = slot['LONGITUD'] - available_space
+
+        if(condition):
+            if(equip_len <= available_space):
+                slot['EQUIPOS'].append(equip_summary)
+
+                # Change this to add storage details
+                sorted_inventory.at[index,'Detalle de almacenamiento'] = slot_summary
+                located_equips += 1
+                located = True
+
+        return located, located_equips
+
+    @staticmethod
+    def optimize_slots(sorted_inventory, warehouse):
         """
         Warning: The name of the storage place from the inventory, must match the name of the place
         in the warehouse dimensions
@@ -63,113 +123,50 @@ class InventorySorter:
         
         sorted_inventory["Detalle de almacenamiento"] = ''
 
-        #TODO: Gotta decide if we take the whole warehouse as input or if we take it already filtered
-        warehouse = warehouse_dimensions.query("PLANO == 'Pulmon 3'")
-        warehouse["EQUIPOS"] = [[] for _ in range(len(warehouse))]
-
         warehouse_groups = warehouse.groupby('DIVISION')
-        a_group = warehouse_groups.get_group('A')
-        b_group = warehouse_groups.get_group('B')
+        a_group = warehouse_groups.get_group('A').to_dict(orient='records')
+        b_group = warehouse_groups.get_group('B').to_dict(orient='records')
+
+        ab_list = list(itertools.zip_longest(a_group, b_group))
 
         located_equips = 0
         for index, equip in sorted_inventory.iterrows():
 
-            equip_len = equip['Largo+FS (m)']
             equip_summary = {
                 "GRUPO":equip["GRUPO"],
                 "TAG": equip["TAG"],
-                "LARGO": equip_len,
+                "LARGO": equip['Largo+FS (m)'],
                 "DIAS": equip['Días de almacenamiento']
             }
 
             located = False
 
-            # Warning: for this to work properly, group A and B need to have the same size
-            for i in range(len(a_group)):
-
-                # 1. Check if the equipment fits in closest empty slot in group A
-                a_slot = a_group.iloc[i]
-                a_slot_summary = {
-                    "DIVISION" : a_slot['DIVISION'],
-                    "CARRIL": a_slot['CARRIL']
-                }
-
-                b_slot = b_group.iloc[i]
-                b_slot_summary = {
-                    "DIVISION" : b_slot['DIVISION'],
-                    "CARRIL": b_slot['CARRIL']
-                }
-
-                if(len(a_slot['EQUIPOS']) == 0):
-                    if(equip_len <= a_slot['LONGITUD']):
-                        a_slot['EQUIPOS'].append(equip_summary)
-
-                        # Change this to add storage details
-                        sorted_inventory.at[index,'Detalle de almacenamiento'] = a_slot_summary
-                        located_equips += 1
-                        located = True
-                        break
-
-                # 2. Check if the equipment fits in closest empty slot in group B
-                if(len(b_slot['EQUIPOS']) == 0):
-                    if(equip_len <= b_slot['LONGITUD']):
-                        b_slot['EQUIPOS'].append(equip_summary)
-                        # Change this to add storage details
-                        sorted_inventory.at[index,'Detalle de almacenamiento'] = b_slot_summary
-                        located_equips += 1
-                        located = True
-                        break
             
-            if(not located):
-                for i in range(len(a_group)):
-
-                    a_slot = a_group.iloc[i]
-                    b_slot = b_group.iloc[i]
-
-                    # 3. Check if the equipment fits in closest non-empty slot in group A
-                    if(len(a_slot['EQUIPOS']) != 0):
-                        available_space = 0
-
-                        # Calculate the remaining space in a non-empty slot
-                        for stored_equip in a_slot['EQUIPOS']:
-                            available_space += stored_equip['LARGO']
-                        
-                        available_space = a_slot['LONGITUD'] - available_space
-
-                        if(equip_len <= available_space):
-                            a_slot['EQUIPOS'].append(equip_summary)
-
-                            # Change this to add storage details
-                            sorted_inventory.at[index,'Detalle de almacenamiento'] = a_slot_summary
-                            located_equips += 1
+            for slots in ab_list:
+                
+                # Check on empty slots in both A and B sides
+                for slot in slots:
+                    #print(slots)
+                    if(slot != None):
+                        located, located_equips = InventorySorter._compare_slot_size(slot, equip_summary,index,sorted_inventory, located_equips, empty_slot=True)
+                        if(located):
                             break
-
-
-                        # 4. Check if the equipment fits in closest non-empty slot in group B
-                    if(len(b_slot['EQUIPOS']) != 0):
-                        available_space = 0
-
-                        # Calculate the remaining space in a non-empty slot
-                        for stored_equip in b_slot['EQUIPOS']:
-                            available_space += stored_equip['LARGO']
-                        
-                        available_space = b_slot['LONGITUD'] - available_space
-
-                        if(equip_len <= available_space):
-                            b_slot['EQUIPOS'].append(equip_summary)
-                            # Change this to add storage details
-                            sorted_inventory.at[index,'Detalle de almacenamiento'] = b_slot_summary
-                            located_equips += 1
-                            break
-
+                
+                # Check on non-empty slots in both A and B sides
+                if(not located):
+                    for slot in slots:
+                        if(slot != None):
+                            located, located_equips = InventorySorter._compare_slot_size(slot, equip_summary,index,sorted_inventory,located_equips, empty_slot=False)
+                            if(located):
+                                break
         
-        print("Total equips:", sorted_inventory.shape[0])
+        return sorted_inventory
+
+         
+"""     print("Total equips:", sorted_inventory.shape[0])
         print("Located equips:",located_equips)
         print(sorted_inventory[['Largo+FS (m)','Detalle de almacenamiento']])
-        print(warehouse[["GRUPO","LONGITUD","EQUIPOS"]])
-
-        print(a_group)
-        print(b_group)
+        print(warehouse[["DIVISION","LONGITUD","EQUIPOS"]]) """
 
 
         # ESTA FUNCIONANDO. AHORA AL MOMENTO DE GENERAR LOS ORDENAMIENTOS, TRAS GENERAR EL ORDENAMIENTO

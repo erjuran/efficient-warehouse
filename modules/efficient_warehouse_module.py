@@ -49,9 +49,14 @@ class EfficientWarehouse:
         unsorted_inv = None
         no_sort_place = 'Directo a planta'
 
+        # Add column for adding the equipment records to the warehouse file
+        
+        self.warehouses["EQUIPOS"] = [[] for _ in range(len(self.warehouses))]
+
         for place in self.inventories:
             if(place != no_sort_place):
-                sorted_inv, sorting_tags = InventorySorter.sort_by_all_types(self.inventories[place])
+                warehouse = self.warehouses.query("PLANO == @place")
+                sorted_inv, sorting_tags = InventorySorter.sort_by_all_types(self.inventories[place], warehouse)
 
                 # Flatten the lists
                 for i in range (len(sorting_tags)):  
@@ -70,13 +75,13 @@ class EfficientWarehouse:
         """
         """
         sorted_inventories, sheet_names = self.sort_inventories()
+        #print(sorted_inventories[2])
         
         # Test optimization
-        InventorySorter.optimize_slots(sorted_inventories[4],self.warehouses)
+        #InventorySorter.optimize_slots(sorted_inventories[4],self.warehouses)
         
-        
-        
-        #self.excel_interface.export_multiple_inventories(output_filename,sorted_inventories,sheet_names)
+        self.excel_interface.export_multiple_inventories(output_filename,sorted_inventories,sheet_names)
+        self.excel_interface.export_inventory("PlanosConEquipos.xlsx",self.warehouses)
 
 
 
