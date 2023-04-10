@@ -2,6 +2,7 @@ import pandas as pd
 
 class ExcelInterface:
     """
+    TODO: Turn the methods into static methods
     This class helps to transform data coming from excel into dataframes
     and turn the dataframes back to excel.
     """
@@ -88,6 +89,17 @@ class ExcelInterface:
             Inventory with modifications
         """
         self.__inventory = modified_inventory
+
+    @staticmethod
+    def get_dataframe_from_excel(excel_filename):
+        """
+        """
+        try:
+            return pd.read_excel(excel_filename)
+
+        except Exception as e:
+            print(e)
+            return None
 
 
 

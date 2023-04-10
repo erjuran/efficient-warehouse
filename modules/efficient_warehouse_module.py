@@ -3,11 +3,14 @@ from .sort_inventory_module import InventorySorter
 
 class EfficientWarehouse:
 
-    def __init__(self, input_inventory_name):
+    def __init__(self, input_inventory_filename, input_warehouses_filename):
         self.excel_interface = ExcelInterface()
         self.inv_sorter = InventorySorter
-        self.excel_interface.import_inventory(input_inventory_name)
+        self.excel_interface.import_inventory(input_inventory_filename)
         self.original_inv = self.excel_interface.get_inventory()
+
+        self.warehouses = self.excel_interface.get_dataframe_from_excel(input_warehouses_filename)
+
         self._format_data()
         self.inventories = self._split_inventory(self.original_inv)
         self.sorted_inventories = []
@@ -67,7 +70,13 @@ class EfficientWarehouse:
         """
         """
         sorted_inventories, sheet_names = self.sort_inventories()
-        self.excel_interface.export_multiple_inventories(output_filename,sorted_inventories,sheet_names)
+        
+        # Test optimization
+        InventorySorter.optimize_slots(sorted_inventories[4],self.warehouses)
+        
+        
+        
+        #self.excel_interface.export_multiple_inventories(output_filename,sorted_inventories,sheet_names)
 
 
 

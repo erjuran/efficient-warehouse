@@ -3,11 +3,11 @@ from modules.efficient_warehouse_module import EfficientWarehouse
 
 if __name__ == '__main__':
     
-    efficient_warehouse = EfficientWarehouse("inputs/Equipos.xlsx")
+    efficient_warehouse = EfficientWarehouse("inputs/Equipos.xlsx", "inputs/WarehouseDimensions.xlsx")
     efficient_warehouse.generate_sorted_inventories("MultipleSortedInvs.xlsx")
 
 
-    #excel_interface = ExcelInterface()
+    #excel_interface = ExcelInterface() 
     #excel_interface.import_inventory("Equipos.xlsx")
 
     #original_inv = excel_interface.get_inventory()
