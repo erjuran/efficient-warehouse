@@ -76,7 +76,7 @@ class InventorySorter:
     
 
     @staticmethod
-    def _compare_slot_size(slot, equip_summary, index, sorted_inventory, located_equips, empty_slot = True):
+    def _compare_slot_size(slot, equip_summary, index, sorted_inventory, located_equips, empty_slot):
         # 1. Check if the equipment fits in closest empty slot in group A or B
         
         located = False
@@ -133,8 +133,8 @@ class InventorySorter:
         for index, equip in sorted_inventory.iterrows():
 
             equip_summary = {
-                "GRUPO":equip["GRUPO"],
-                "TAG": equip["TAG"],
+                #"GRUPO":equip["GRUPO"],
+                #"TAG": equip["TAG"],
                 "LARGO": equip['Largo+FS (m)'],
                 "DIAS": equip['Días de almacenamiento']
             }
@@ -145,21 +145,28 @@ class InventorySorter:
             for slots in ab_list:
                 
                 # Check on empty slots in both A and B sides
-                for slot in slots:
-                    #print(slots)
-                    if(slot != None):
-                        located, located_equips = InventorySorter._compare_slot_size(slot, equip_summary,index,sorted_inventory, located_equips, empty_slot=True)
-                        if(located):
-                            break
-                
-                # Check on non-empty slots in both A and B sides
                 if(not located):
+                    for slot in slots:
+                        #print(slots)
+                        if(slot != None):
+                            located, located_equips = InventorySorter._compare_slot_size(slot, equip_summary,index,sorted_inventory, located_equips, empty_slot=True)
+                            if(located):
+                                break
+                    if(located):
+                        break
+                
+            # Check on non-empty slots in both A and B sides
+            if(not located):
+                for slots in ab_list:
                     for slot in slots:
                         if(slot != None):
                             located, located_equips = InventorySorter._compare_slot_size(slot, equip_summary,index,sorted_inventory,located_equips, empty_slot=False)
                             if(located):
                                 break
+                    if(located):
+                        break
         
+        print(located_equips)
         return sorted_inventory
 
          
