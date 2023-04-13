@@ -1,9 +1,12 @@
+from datetime import datetime
+import pandas as pd
+
 from .excel_interface_module import ExcelInterface
 from .sort_inventory_module import InventorySorter
 
 class EfficientWarehouse:
 
-    def __init__(self, input_inventory_filename, input_warehouses_filename):
+    def __init__(self, input_inventory_filename, input_warehouses_filename, opt_style="storage-days"):
         self.excel_interface = ExcelInterface()
         self.inv_sorter = InventorySorter
         self.excel_interface.import_inventory(input_inventory_filename)
@@ -12,9 +15,14 @@ class EfficientWarehouse:
         self.warehouses = self.excel_interface.get_dataframe_from_excel(input_warehouses_filename)
 
         self._format_data()
-        self.inventories = self._split_inventory(self.original_inv)
+        if(opt_style == "remaining-days"):
+            rem_inv = self._calculate_remaining_days(self.original_inv)
+            self.inventories = self._split_inventory(rem_inv)
+            InventorySorter.opt_style = 'remaining-days'
+        else:
+            self.inventories = self._split_inventory(self.original_inv)
+
         self.sorted_inventories = []
-        #inventory_sorter = InventorySorter(self.original_inv)
 
     def _format_data(self):
         """
@@ -27,6 +35,22 @@ class EfficientWarehouse:
 
         # Remove the space at the end of the 'GRUPO' value 
         self.original_inv['GRUPO'] = self.original_inv['GRUPO'].str.rstrip()
+
+    def _calculate_remaining_days(self, original_inv):
+        """
+        """
+        # get current date and time
+        current_date_time = datetime.now()
+        # create a Pandas timestamp from the current date and time
+        current_timestamp = pd.Timestamp(current_date_time)
+
+        def calculate_rows(row):
+            rem_days = (row['Salida'] - current_timestamp).days
+            return rem_days
+
+        original_inv['Días restantes'] = original_inv.apply(calculate_rows,axis=1)
+        return original_inv
+
 
     
     def _split_inventory(self, original_inv):
@@ -71,7 +95,7 @@ class EfficientWarehouse:
         self.sheet_names.append(no_sort_place)
         return self.sorted_inventories, self.sheet_names
     
-    def generate_sorted_inventories(self, output_filename):
+    def generate_sorted_inventories(self, output_inv_filename, output_warehouse_filename):
         """
         """
         sorted_inventories, sheet_names = self.sort_inventories()
@@ -80,8 +104,8 @@ class EfficientWarehouse:
         # Test optimization
         #InventorySorter.optimize_slots(sorted_inventories[4],self.warehouses)
         
-        self.excel_interface.export_multiple_inventories(output_filename,sorted_inventories,sheet_names)
-        self.excel_interface.export_inventory("PlanosConEquipos.xlsx",self.warehouses)
+        self.excel_interface.export_multiple_inventories("outputs/"+output_inv_filename,sorted_inventories,sheet_names)
+        self.excel_interface.export_inventory("outputs/"+output_warehouse_filename,self.warehouses)
 
 
 

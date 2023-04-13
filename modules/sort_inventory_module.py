@@ -5,12 +5,15 @@ class InventorySorter:
     """
     """
     sort_types = ['GROUP','DAYS','SLOTS']
+    opt_style = "storage-days"
 
     @staticmethod
     def sort_by_group(external_inventory):
         """
         """
-        sorted_inventory = external_inventory.sort_values(['GRUPO','Días de almacenamiento']).groupby('GRUPO')
+        column = 'Días de almacenamiento' if InventorySorter.opt_style == 'storage-days' else 'Días restantes'
+
+        sorted_inventory = external_inventory.sort_values(['GRUPO',column]).groupby('GRUPO')
         sorted_inventory_df = sorted_inventory.apply(lambda x: x.reset_index(drop=True))
         return sorted_inventory_df
     
@@ -18,7 +21,8 @@ class InventorySorter:
     def sort_by_days(external_inventory):
         """
         """
-        sorted_inventory = external_inventory.sort_values(['Días de almacenamiento'])
+        column = 'Días de almacenamiento' if InventorySorter.opt_style == 'storage-days' else 'Días restantes'
+        sorted_inventory = external_inventory.sort_values([column])
         return sorted_inventory
     
     @staticmethod
@@ -86,6 +90,13 @@ class InventorySorter:
             "CARRIL": slot['CARRIL']
         }
 
+        summary_string = ''
+        for key in slot_summary:
+            summary_string += key + ':' + str(slot_summary[key]) + ' '
+
+        
+        equip_summary_string = 'GRUPO:' + equip_summary['GRUPO'] + '-TAG:' +  equip_summary['TAG'] + ', '
+
         equip_len = equip_summary['LARGO']
         condition = (len(slot['EQUIPOS']) == 0) if empty_slot else (len(slot['EQUIPOS']) != 0)
 
@@ -106,7 +117,7 @@ class InventorySorter:
                 slot['EQUIPOS'].append(equip_summary)
 
                 # Change this to add storage details
-                sorted_inventory.at[index,'Detalle de almacenamiento'] = slot_summary
+                sorted_inventory.at[index,'Detalle de almacenamiento'] = summary_string
                 located_equips += 1
                 located = True
 
@@ -133,8 +144,8 @@ class InventorySorter:
         for index, equip in sorted_inventory.iterrows():
 
             equip_summary = {
-                #"GRUPO":equip["GRUPO"],
-                #"TAG": equip["TAG"],
+                "GRUPO":equip["GRUPO"],
+                "TAG": equip["TAG"],
                 "LARGO": equip['Largo+FS (m)'],
                 "DIAS": equip['Días de almacenamiento']
             }
@@ -166,19 +177,8 @@ class InventorySorter:
                     if(located):
                         break
         
-        print(located_equips)
+        #print(located_equips)
         return sorted_inventory
-
-         
-"""     print("Total equips:", sorted_inventory.shape[0])
-        print("Located equips:",located_equips)
-        print(sorted_inventory[['Largo+FS (m)','Detalle de almacenamiento']])
-        print(warehouse[["DIVISION","LONGITUD","EQUIPOS"]]) """
-
-
-        # ESTA FUNCIONANDO. AHORA AL MOMENTO DE GENERAR LOS ORDENAMIENTOS, TRAS GENERAR EL ORDENAMIENTO
-        # DE DIAS, SE DEBE GENERAR EL ORDENAMIENTO DE SLOTS
-
 
 
                     
