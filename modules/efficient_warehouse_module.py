@@ -13,8 +13,8 @@ class EfficientWarehouse:
         self.original_inv = self.excel_interface.get_inventory()
 
         self.warehouses = self.excel_interface.get_dataframe_from_excel(input_warehouses_filename)
-
         self._format_data()
+
         if(opt_style == "remaining-days"):
             rem_inv = self._calculate_remaining_days(self.original_inv)
             self.inventories = self._split_inventory(rem_inv)
@@ -99,11 +99,7 @@ class EfficientWarehouse:
         """
         """
         sorted_inventories, sheet_names = self.sort_inventories()
-        #print(sorted_inventories[2])
-        
-        # Test optimization
-        #InventorySorter.optimize_slots(sorted_inventories[4],self.warehouses)
-        
+
         self.excel_interface.export_multiple_inventories("outputs/"+output_inv_filename,sorted_inventories,sheet_names)
         self.excel_interface.export_inventory("outputs/"+output_warehouse_filename,self.warehouses)
 

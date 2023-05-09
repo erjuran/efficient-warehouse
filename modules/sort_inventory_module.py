@@ -177,7 +177,6 @@ class InventorySorter:
                     if(located):
                         break
         
-        #print(located_equips)
         return sorted_inventory
 
 
