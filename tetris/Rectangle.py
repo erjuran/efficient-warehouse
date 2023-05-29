@@ -9,6 +9,7 @@ class Rectangle:
         self.x_rotated = None
         self.y_rotated = None
         self.rotated_corners = None
+        self.initial_coords = None
         self.rotate()
 
     def rotate(self):
@@ -34,14 +35,24 @@ class Rectangle:
         self.x_rotated = [x - x_min for x in self.x_rotated]
         self.y_rotated = [y - y_min for y in self.y_rotated]
         self.rotated_corners = [(x - x_min, y - y_min) for x, y in self.rotated_corners]
+        self.initial_coords = self.rotated_corners.copy()
 
         #print(self.rotated_corners)
         #print(self.x_rotated)
         #print(self.y_rotated)
     
     def update_coords(self, x_diff, y_diff):
-        self.x_rotated = [x + x_diff for x in self.x_rotated]
-        self.y_rotated = [y + y_diff for y in self.y_rotated]
+
+        if(x_diff > 0):
+            self.x_rotated = [x + x_diff for x in self.x_rotated]
+        
+
+        if(y_diff > 0):
+            self.rotated_corners = self.initial_coords
+            self.y_rotated = [coord[1] for coord in self.rotated_corners]
+            self.x_rotated = [coord[0] for coord in self.rotated_corners]
+            self.y_rotated = [y + y_diff for y in self.y_rotated]
+
         self.rotated_corners = [(x + x_diff, y + y_diff) for x, y in self.rotated_corners]
 
 

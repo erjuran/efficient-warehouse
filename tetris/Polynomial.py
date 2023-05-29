@@ -22,9 +22,10 @@ class Polynomial:
         self.model = joblib.load(model_path)
         self.x_range = x_range
 
-        self.x_values = np.linspace(x_range[0], x_range[1], 10000)
-        self.y_values = self.model.predict(self.x_values)
-        self.y_range = (0, max(self.y_values))
+        self.x_values = np.linspace(x_range[0], x_range[1], 100)
+        self.y_predictions = self.model.predict(self.x_values)
+        self.y_range = (0, max(self.y_predictions))
+        self.y_values = np.linspace(self.y_range[0], self.y_range[1], 100)
 
 
 
