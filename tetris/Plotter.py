@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import numpy as np
 
 class Plotter:
 
@@ -20,3 +21,47 @@ class Plotter:
         # Show the plot
         plt.axis('equal')
         plt.show()
+    
+    @staticmethod
+    def plot_model_rectangles(model, x_range, rects):
+        # Generate x-values to plot the regression line
+        x_values = np.linspace(x_range[0], x_range[1], 100)
+        x = np.arange(x_range[0],x_range[1])
+        y = model.predict(x)
+
+        fig, ax = plt.subplots()
+        ax.plot(x, y, label='Función Polinómica')
+
+        for rectangle in rects:
+            # Draw the rotated rectangle
+            ax.add_patch(patches.Polygon(list(zip(rectangle.x_rotated, rectangle.y_rotated)), closed=True, facecolor='blue'))
+
+        ax.set_xlim(left=min(x_values))
+        ax.set_ylim(bottom=0)
+        ax.set_aspect('equal')
+        #ax.set_ylim([min(y) - max([rect.alto for rect in rectangulos]), max(y)])
+        ax.legend()
+
+        plt.show()
+
+    @staticmethod
+    def save_model_rectangles(model, x_range, rects, title, filename):
+        # Generate x-values to plot the regression line
+        x_values = np.linspace(x_range[0], x_range[1], 100)
+        x = np.arange(x_range[0],x_range[1])
+        y = model.predict(x)
+
+        fig, ax = plt.subplots()
+        ax.plot(x, y, label='Función Polinómica')
+
+        for rectangle in rects:
+            # Draw the rotated rectangle
+            ax.add_patch(patches.Polygon(list(zip(rectangle.x_rotated, rectangle.y_rotated)), closed=True, facecolor='blue'))
+
+        ax.set_xlim(left=min(x_values))
+        ax.set_ylim(bottom=0)
+        ax.set_aspect('equal')
+        #ax.set_ylim([min(y) - max([rect.alto for rect in rectangulos]), max(y)])
+        ax.legend()
+        ax.set_title(title)
+        plt.savefig(filename)

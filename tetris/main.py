@@ -2,11 +2,14 @@ from Polynomial import Polynomial, PolyRegressor
 from Rectangle import Rectangle
 from Plotter import Plotter
 from Sorter import Sorter
+from DualSorter import DualSorter
 
-place = Polynomial((0, 250),'math_models/Pulmon1A.joblib')
+placeA = Polynomial((0, 250),'math_models/Pulmon1A.joblib')
+placeB = Polynomial((0, 250),'math_models/Pulmon1B.joblib')
+
 
 unlocated_rects = []
-for i in range(6):
+for i in range(10):
 
     rec1 = Rectangle(13, 18, -30)
     rec2 = Rectangle(9, 13, -30)
@@ -17,19 +20,22 @@ for i in range(6):
 
 unlocated_rects.append(Rectangle(2, 8, -30))
 
-sorter = Sorter(unlocated_rects, place)
+''' One place test
+sorter = Sorter(unlocated_rects, placeA)
 located_rects = sorter.locate_rects()
 
-""" index = 0
-for rect in located_rects:
-    xs = max(rect.x_rotated)
-    if(xs > 500):
-        print(xs)
-        print(f'Index:{index+1}')
-        print(rect.rotated_corners)
-    index+=1 """
+#Plotter.plot_rectangles(located_rects)
+Plotter.plot_model_rectangles(place.model, (0,250), located_rects)
+'''
 
-Plotter.plot_rectangles(located_rects)
-#Plotter.plot_rectangles(unlocated_rects)
+# Dual place test
+sorter = DualSorter(unlocated_rects,placeA,placeB)
+placeA_recs, placeB_recs = sorter.locate_rects()
+
+#Plotter.plot_model_rectangles(placeA.model, (0,250), placeA_recs)
+#Plotter.plot_model_rectangles(placeB.model, (0,250), placeB_recs)
+
+Plotter.save_model_rectangles(placeA.model, (0,250), placeA_recs, "Pulmon 1A Test", "tetrisPulmon1A.png")
+Plotter.save_model_rectangles(placeB.model, (0,250), placeB_recs, "Pulmon 1B Test", "tetrisPulmon1B.png")
 
 

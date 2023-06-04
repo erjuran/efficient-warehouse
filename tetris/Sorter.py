@@ -7,7 +7,7 @@ class Sorter:
         self.located_recs = []
         self.place = place
         self.model = place.model
-        
+
     def _rect_fits_poly(self, corners, patio):
         for corner in corners:
             x_corner = corner[0]
