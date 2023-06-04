@@ -30,56 +30,66 @@ class DualSorter:
             
         return True
     
-    # def _assign_coords(self):
-    #     if(not located):
-    #         for x_patio in x_values:
+    def _assign_coords(self, place, x_values, y_values, rect, located_recs, located=False):
+        for y_patio in y_values:
 
-    #             fits = False
-    #             overlap = False
+            if(not located):
+                for x_patio in x_values:
 
-    #             corners = rect.rotated_corners
-    #             left_corner = corners[0]
+                    fits = False
+                    overlap = False
 
-    #             # Check if rectangle fits inside the plane A first, then checks the plane B
-    #             fits = self._rect_fits_poly(corners, place)
-    #             if(fits):
-    #                 #if(index == monitor): print(f'Fit!')
+                    corners = rect.rotated_corners
+                    left_corner = corners[0]
 
-    #                 if(len(located_recs)>0):
-    #                     # Compare the rectangles
-    #                     for other in located_recs:
-    #                         if(rect.overlap(other)):
-    #                             overlap = True
-    #                             break
-    #                 else:
-    #                     overlap = False
-                    
-    #                 if(not overlap):
-    #                     located_recs.append(rect)
-    #                     located = True
-    #                     break
-    #                 else:
-    #                     x_diff = abs(x_patio - left_corner[0])
-    #                     # Move the X coordinates a bit a try again
-    #                     rect.update_coords(x_diff,0)
+                    # Check if rectangle fits inside the plane
+                    fits = self._rect_fits_poly(corners, place)
+                    if(fits):
+                        #if(index == monitor): print(f'Fit!')
 
-    #             else:
-    #                 x_diff = abs(x_patio - left_corner[0])
-    #                 # Move the X coordinates a bit a try again
-    #                 rect.update_coords(x_diff,0)
-            
-    #     if(not located):
-    #         if(index-1 % 2 == 0):
-    #             y_patio = y_patioA
-    #         else:
-    #             y_patio = y_patioB
+                        if(len(located_recs)>0):
+                            # Compare the rectangles
+                            for other in located_recs:
+                                if(rect.overlap(other)):
+                                    #if(index == monitor):  
+                                    #    print(f'Overlap!') 
+                                    #    print(rect.rotated_corners)
+                                    overlap = True
+                                    break
+                        else:
+                            overlap = False
+                        
+                        if(not overlap):
+                            # Rectangle located
+                            #print(f'Rect {index}: Located!')
+                            located_recs.append(rect)
+                            located = True
+                            #unlocated_recs.remove(rect)
+                            break
+                        else:
+                            x_diff = abs(x_patio - left_corner[0])
+                            # Move the X coordinates a bit a try again
+                            rect.update_coords(x_diff,0)
+                            #print(f'Rect {index}: Updating coords')
 
-    #         y_diff = abs(y_patio - left_corner[1])
-    #         # Move the Y coordinates a bit a try again
-    #         rect.update_coords(0, y_diff)
-    #     else:
-    #         break
-
+                    else:
+                        x_diff = abs(x_patio - left_corner[0])
+                        # Move the X coordinates a bit a try again
+                        rect.update_coords(x_diff,0)
+                        #print(f'Rect {index}: Updating coords')
+                
+            if(not located):
+                y_diff = abs(y_patio - left_corner[1])
+                # Move the Y coordinates a bit a try again
+                
+                #if(index == monitor):
+                #    print(f'Rect {index}: Updating coords in Y')
+                #    print(rect.rotated_corners)
+                rect.update_coords(0, y_diff)
+            else:
+                break
+    
+        return located
     
     def locate_rects(self):
         monitor = 19
@@ -95,69 +105,26 @@ class DualSorter:
             #print(f'\n\nRECT {index}\n')
             if(index == monitor):
                 print(f'ORIGINAL:{rect.rotated_corners}')
-
+                
             if((index-1) % 2 == 0):
                 place = self.placeA
+                y_values = placeA_y_values
                 located_recs = self.placeA_recs
             else:
                 place = self.placeB
+                y_values = placeB_y_values
                 located_recs = self.placeB_recs
 
-            located = False
-            for y_patioA, y_patioB in zip(placeA_y_values,placeB_y_values):
-                
-
-
-                if(not located):
-                    for x_patio in x_values:
-
-                        fits = False
-                        overlap = False
-
-                        corners = rect.rotated_corners
-                        left_corner = corners[0]
-
-                        # Check if rectangle fits inside the plane A first, then checks the plane B
-                        fits = self._rect_fits_poly(corners, place)
-                        if(fits):
-                            #if(index == monitor): print(f'Fit!')
-
-                            if(len(located_recs)>0):
-                                # Compare the rectangles
-                                for other in located_recs:
-                                    if(rect.overlap(other)):
-                                        overlap = True
-                                        break
-                            else:
-                                overlap = False
-                            
-                            if(not overlap):
-                                located_recs.append(rect)
-                                located = True
-                                break
-                            else:
-                                x_diff = abs(x_patio - left_corner[0])
-                                # Move the X coordinates a bit a try again
-                                rect.update_coords(x_diff,0)
-
-                        else:
-                            x_diff = abs(x_patio - left_corner[0])
-                            # Move the X coordinates a bit a try again
-                            rect.update_coords(x_diff,0)
-                    
-                if(not located):
-                    if(index-1 % 2 == 0):
-                        y_patio = y_patioA
-                    else:
-                        y_patio = y_patioB
-
-                    y_diff = abs(y_patio - left_corner[1])
-                    # Move the Y coordinates a bit a try again
-                    rect.update_coords(0, y_diff)
-                else:
-                    break
+            located = self._assign_coords(place, x_values, y_values, rect, located_recs)
             
-            #if(not located): print(f'NOT LOCATED:{index}')
+            if(not located): 
+                # If couldn't locate on one place, try the other
+                if((index-1) % 2 == 0): # Place A
+                    located = self._assign_coords(self.placeB, x_values, placeB_y_values, rect, self.placeB_recs)
+                else: # Place B
+                    located = self._assign_coords(self.placeA, x_values, placeA_y_values, rect, self.placeA_recs)
+
+
             if(index == monitor): print(f'LAST: {rect.rotated_corners}')
 
         print(f'Unlocated: {len(self.unlocated_recs)}')
