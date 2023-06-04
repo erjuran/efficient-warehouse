@@ -2,9 +2,16 @@ import math
 import numpy as np
 
 class Rectangle:
-    def __init__(self, width, height, angle):
-        self.width = width
-        self.height = height
+    def __init__(self, width, height, angle, summary=None):
+        self.summary = summary
+
+        if(width > height):
+            self.width = height
+            self.height = width
+        else:
+            self.width = width
+            self.height = height
+            
         self.angle = angle
         self.x_rotated = None
         self.y_rotated = None

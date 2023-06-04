@@ -1,10 +1,15 @@
 import pandas as pd
 import itertools
+from .tetris.DualSorter import DualSorter
+from .tetris.Rectangle import Rectangle
+from .tetris.Plotter import Plotter
+from .tetris.Polynomial import Polynomial, PolyRegressor
 
 class InventorySorter:
     """
     """
-    sort_types = ['GROUP','DAYS','SLOTS']
+    sort_types = ['GROUP','DAYS','SLOTS','TETRIS']
+    #sort_types = ['GROUP','DAYS']
     opt_style = "storage-days"
 
     @staticmethod
@@ -24,7 +29,63 @@ class InventorySorter:
         column = 'Días de almacenamiento' if InventorySorter.opt_style == 'storage-days' else 'Días restantes'
         sorted_inventory = external_inventory.sort_values([column])
         return sorted_inventory
-    
+
+    @staticmethod
+    def sort_by_tetris(sorted_inventory):
+
+        sorted_inventory["Detalle de almacenamiento"] = ''
+
+        located_equips = 0
+        unlocated_recs = []
+
+        for index, equip in sorted_inventory.iterrows():
+
+            equip_summary = {
+                "GRUPO":equip["GRUPO"],
+                "TAG": equip["TAG"],
+                "LARGO": equip['Largo+FS (m)'],
+                "ANCHO": equip['Ancho+FS (m)'],
+                "DIAS": equip['Días de almacenamiento']
+            }
+
+            unlocated_recs.append(Rectangle(equip_summary['ANCHO'], equip_summary['LARGO'], -30, equip_summary))
+        
+        
+        place = sorted_inventory.sample(n=1)['Lugar de almacenamiento'].values[0]
+        valid_place = False
+
+        match place:
+            case 'Pulmon 1':
+                placeA_model = 'Pulmon1A.joblib'
+                placeB_model = 'Pulmon1B.joblib'
+                x_range = (0, 250)
+                valid_place = True
+                
+            case 'Pulmon 2':
+                placeA_model = 'Pulmon2A.joblib'
+                placeB_model = 'Pulmon2B.joblib'
+                x_range = (0, 250)
+                valid_place = True
+
+            case 'Pulmon 3':
+                placeA_model = 'Pulmon3A.joblib'
+                placeB_model = 'Pulmon3B.joblib'
+                x_range = (0, 130)
+                valid_place = True
+
+            case _:
+                pass
+                
+        if(valid_place):
+            placeA = Polynomial(x_range,'modules/tetris/math_models/' + placeA_model)
+            placeB = Polynomial(x_range,'modules/tetris/math_models/' + placeB_model)
+
+            sorter = DualSorter(unlocated_recs,placeA,placeB)
+            placeA_recs, placeB_recs = sorter.locate_rects()
+
+            Plotter.save_model_rectangles(placeA.model, x_range, placeA_recs, place + "A", "tetris" + place + "A.png")
+            Plotter.save_model_rectangles(placeB.model, x_range, placeB_recs, place + "B", "tetris" + place + "B.png")
+
     @staticmethod
     def _get_sorting_methods():
         """
@@ -40,6 +101,8 @@ class InventorySorter:
                     method = InventorySorter.sort_by_days
                 case "SLOTS":
                     method = InventorySorter.optimize_slots
+                case "TETRIS":
+                    method = InventorySorter.sort_by_tetris
                 case _:
                     # Default case
                     method = InventorySorter.sort_by_group
@@ -68,11 +131,17 @@ class InventorySorter:
                 sorted_inv = sorting_methods[i](external_inventory)
                 sorted_by_days_inv = sorted_inv
 
+            elif(sorting_tags[i] == 'GROUP'):
+                sorted_inv = sorting_methods[i](external_inventory)
+
             elif(sorting_tags[i] == 'SLOTS'):
                 sorted_inv = sorting_methods[i](sorted_by_days_inv.copy(), warehouse)
 
-            else:
-                sorted_inv = sorting_methods[i](external_inventory)
+            elif(sorting_tags[i] == 'TETRIS'):
+                sorted_inv = sorting_methods[i](sorted_by_days_inv.copy())
+
+            #else:
+            #    sorted_inv = sorting_methods[i](external_inventory)
             
             sorted_invs.append(sorted_inv)
 

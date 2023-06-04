@@ -103,8 +103,8 @@ class DualSorter:
         for rect in self.unlocated_recs:
             index += 1
             #print(f'\n\nRECT {index}\n')
-            if(index == monitor):
-                print(f'ORIGINAL:{rect.rotated_corners}')
+            #if(index == monitor):
+            #    print(f'ORIGINAL:{rect.rotated_corners}')
                 
             if((index-1) % 2 == 0):
                 place = self.placeA
@@ -125,8 +125,9 @@ class DualSorter:
                     located = self._assign_coords(self.placeA, x_values, placeA_y_values, rect, self.placeA_recs)
 
 
-            if(index == monitor): print(f'LAST: {rect.rotated_corners}')
+            #if(index == monitor): print(f'LAST: {rect.rotated_corners}')
 
-        print(f'Unlocated: {len(self.unlocated_recs)}')
-        print(f'Located: {len(self.placeA_recs) + len(self.placeB_recs)}')
+        loc_recs = len(self.placeA_recs) + len(self.placeB_recs)
+        print(f'Unlocated: {len(self.unlocated_recs) - loc_recs}')
+        print(f'Located: {loc_recs}')
         return self.placeA_recs, self.placeB_recs
