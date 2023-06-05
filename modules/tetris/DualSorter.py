@@ -95,7 +95,8 @@ class DualSorter:
         monitor = 19
         index = 0
 
-        x_values = self.placeA.x_values
+        placeA_x_values = self.placeA.x_values
+        placeB_x_values = self.placeA.x_values
         placeA_y_values = self.placeA.y_values
         placeB_y_values = self.placeB.y_values
 
@@ -108,10 +109,12 @@ class DualSorter:
                 
             if((index-1) % 2 == 0):
                 place = self.placeA
+                x_values = placeA_x_values
                 y_values = placeA_y_values
                 located_recs = self.placeA_recs
             else:
                 place = self.placeB
+                x_values = placeA_x_values
                 y_values = placeB_y_values
                 located_recs = self.placeB_recs
 
@@ -120,14 +123,16 @@ class DualSorter:
             if(not located): 
                 # If couldn't locate on one place, try the other
                 if((index-1) % 2 == 0): # Place A
-                    located = self._assign_coords(self.placeB, x_values, placeB_y_values, rect, self.placeB_recs)
+                    located = self._assign_coords(self.placeB, placeA_x_values, placeB_y_values, rect, self.placeB_recs)
                 else: # Place B
-                    located = self._assign_coords(self.placeA, x_values, placeA_y_values, rect, self.placeA_recs)
+                    located = self._assign_coords(self.placeA, placeA_x_values, placeA_y_values, rect, self.placeA_recs)
 
 
             #if(index == monitor): print(f'LAST: {rect.rotated_corners}')
 
         loc_recs = len(self.placeA_recs) + len(self.placeB_recs)
-        print(f'Unlocated: {len(self.unlocated_recs) - loc_recs}')
-        print(f'Located: {loc_recs}')
+        print(f'No ubicados: {len(self.unlocated_recs) - loc_recs}')
+        print(f'Ubicados: {loc_recs}')
+        print(f'Patio A {len(self.placeA_recs)}')
+        print(f'Patio B {len(self.placeB_recs)}')
         return self.placeA_recs, self.placeB_recs

@@ -41,50 +41,92 @@ class InventorySorter:
         for index, equip in sorted_inventory.iterrows():
 
             equip_summary = {
-                "GRUPO":equip["GRUPO"],
-                "TAG": equip["TAG"],
-                "LARGO": equip['Largo+FS (m)'],
-                "ANCHO": equip['Ancho+FS (m)'],
-                "DIAS": equip['Días de almacenamiento']
+                "INDEX": index,
+                #"GRUPO":equip["GRUPO"],
+                #"TAG": equip["TAG"],
+                #"LARGO": equip['Largo+FS (m)'],
+                #"ANCHO": equip['Ancho+FS (m)'],
+                #"DIAS": equip['Días de almacenamiento']
             }
 
-            unlocated_recs.append(Rectangle(equip_summary['ANCHO'], equip_summary['LARGO'], -30, equip_summary))
+            unlocated_recs.append(Rectangle(equip['Ancho+FS (m)'], equip['Largo+FS (m)'], -30, equip_summary))
         
         
         place = sorted_inventory.sample(n=1)['Lugar de almacenamiento'].values[0]
         valid_place = False
 
+        print(f'\n{place}\n')
+
         match place:
             case 'Pulmon 1':
                 placeA_model = 'Pulmon1A.joblib'
                 placeB_model = 'Pulmon1B.joblib'
-                x_range = (0, 250)
+                placeA_x_range = (0, 250)
+                placeB_x_range = (0, 250)
                 valid_place = True
                 
             case 'Pulmon 2':
                 placeA_model = 'Pulmon2A.joblib'
                 placeB_model = 'Pulmon2B.joblib'
-                x_range = (0, 250)
+                placeA_x_range = (0, 220)
+                placeB_x_range = (0, 250)
                 valid_place = True
 
             case 'Pulmon 3':
                 placeA_model = 'Pulmon3A.joblib'
                 placeB_model = 'Pulmon3B.joblib'
-                x_range = (0, 130)
+                placeA_x_range = (0, 130)
+                placeB_x_range = (0, 130)
                 valid_place = True
 
             case _:
                 pass
                 
         if(valid_place):
-            placeA = Polynomial(x_range,'modules/tetris/math_models/' + placeA_model)
-            placeB = Polynomial(x_range,'modules/tetris/math_models/' + placeB_model)
+            placeA = Polynomial(placeA_x_range,'modules/tetris/math_models/' + placeA_model)
+            placeB = Polynomial(placeB_x_range,'modules/tetris/math_models/' + placeB_model)
 
             sorter = DualSorter(unlocated_recs,placeA,placeB)
             placeA_recs, placeB_recs = sorter.locate_rects()
 
-            Plotter.save_model_rectangles(placeA.model, x_range, placeA_recs, place + "A", "tetris" + place + "A.png")
-            Plotter.save_model_rectangles(placeB.model, x_range, placeB_recs, place + "B", "tetris" + place + "B.png")
+            Plotter.save_model_rectangles(placeA.model, placeA_x_range, placeA_recs, place + "A", "outputs/tetris" + place + "A.png")
+            Plotter.save_model_rectangles(placeB.model, placeB_x_range, placeB_recs, place + "B", "outputs/tetris" + place + "B.png")
+            
+            # Add the information to the excel table about equipment location
+            for equip in placeA_recs:
+                summary = equip.summary
+                index = summary['INDEX']
+
+                # Refactor the summary
+                del summary['INDEX']
+                summary['PATIO'] = 'A'
+                summary['COORDS'] = equip.rotated_corners
+                
+                # Add the summary to the dataframe row
+                summary_string = ''
+                for key in summary:
+                    summary_string += key + ':' + str(summary[key]) + ' '
+
+                sorted_inventory.at[index,'Detalle de almacenamiento'] = summary_string
+            
+            for equip in placeB_recs:
+                summary = equip.summary
+                index = summary['INDEX']
+
+                # Refactor the summary
+                del summary['INDEX']
+                summary['PATIO'] = 'B'
+                summary['COORDS'] = equip.rotated_corners
+                
+
+                # Add the summary to the dataframe row
+                summary_string = ''
+                for key in summary:
+                    summary_string += key + ':' + str(summary[key]) + ' '
+
+                sorted_inventory.at[index,'Detalle de almacenamiento'] = summary_string
+        
+        return sorted_inventory
 
     @staticmethod
     def _get_sorting_methods():

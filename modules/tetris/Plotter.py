@@ -56,12 +56,12 @@ class Plotter:
 
         for rectangle in rects:
             # Draw the rotated rectangle
-            ax.add_patch(patches.Polygon(list(zip(rectangle.x_rotated, rectangle.y_rotated)), closed=True, facecolor='blue'))
+            ax.add_patch(patches.Polygon(list(zip(rectangle.x_rotated, rectangle.y_rotated)), closed=True, facecolor='orange'))
 
         ax.set_xlim(left=min(x_values))
         ax.set_ylim(bottom=0)
         ax.set_aspect('equal')
         #ax.set_ylim([min(y) - max([rect.alto for rect in rectangulos]), max(y)])
         ax.legend()
-        ax.set_title(title)
+        ax.set_title(title + ': ' + str(len(rects)) + ' equipos ubicados')
         plt.savefig(filename)
