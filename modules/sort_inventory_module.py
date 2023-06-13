@@ -31,6 +31,109 @@ class InventorySorter:
         return sorted_inventory
 
     @staticmethod
+    def sort_by_tetris_slots(sorted_inventory, slot_size):
+
+        sorted_inventory["Detalle de almacenamiento"] = ''
+
+        located_equips = 0
+        unlocated_recs = []
+
+        for index, equip in sorted_inventory.iterrows():
+
+            equip_summary = {
+                "INDEX": index,
+                #"GRUPO":equip["GRUPO"],
+                #"TAG": equip["TAG"],
+                #"LARGO": equip['Largo+FS (m)'],
+                #"ANCHO": equip['Ancho+FS (m)'],
+                #"DIAS": equip['Días de almacenamiento']
+            }
+
+            unlocated_recs.append(Rectangle(equip['Ancho+FS (m)'], equip['Largo+FS (m)'], -30, equip_summary))
+        
+        
+        place = sorted_inventory.sample(n=1)['Lugar de almacenamiento'].values[0]
+        valid_place = False
+
+        print(f'\n{place}\n')
+
+        match place:
+            case 'Pulmon 1':
+                placeA_model = 'Pulmon1A.joblib'
+                placeB_model = 'Pulmon1B.joblib'
+                placeA_x_range = (0, 250)
+                placeB_x_range = (0, 250)
+                valid_place = True
+                
+            case 'Pulmon 2ffffff':
+                placeA_model = 'Pulmon2A.joblib'
+                placeB_model = 'Pulmon2B.joblib'
+                placeA_x_range = (0, 220)
+                placeB_x_range = (0, 250)
+                valid_place = True
+
+            case 'Pulmon 3ffffff':
+                placeA_model = 'Pulmon3A.joblib'
+                placeB_model = 'Pulmon3B.joblib'
+                placeA_x_range = (0, 130)
+                placeB_x_range = (0, 130)
+                valid_place = True
+
+            case _:
+                valid_place = False
+                pass
+                
+        if(valid_place):
+            placeA = Polynomial(placeA_x_range,'modules/tetris/math_models/' + placeA_model, slot_size)
+            placeB = Polynomial(placeB_x_range,'modules/tetris/math_models/' + placeB_model, slot_size)
+
+            sorter = DualSorter(unlocated_recs,placeA,placeB, slot_size)
+            placeA_recs, placeB_recs = sorter.locate_rects()
+
+            Plotter.save_model_rectangles(placeA.model, placeA_x_range, placeA_recs, place + "A", "outputs/tetris" + place + "A.png")
+            Plotter.save_model_rectangles(placeB.model, placeB_x_range, placeB_recs, place + "B", "outputs/tetris" + place + "B.png")
+            
+            # Add the information to the excel table about equipment location
+            for equip in placeA_recs:
+                summary = equip.summary
+                index = summary['INDEX']
+
+                # Refactor the summary
+                del summary['INDEX']
+                summary['PATIO'] = 'A'
+                summary['COORDS'] = equip.rotated_corners
+                
+                # Add the summary to the dataframe row
+                summary_string = ''
+                for key in summary:
+                    summary_string += key + ':' + str(summary[key]) + ' '
+
+                sorted_inventory.at[index,'Detalle de almacenamiento'] = summary_string
+            
+            for equip in placeB_recs:
+                summary = equip.summary
+                index = summary['INDEX']
+
+                # Refactor the summary
+                del summary['INDEX']
+                summary['PATIO'] = 'B'
+                summary['COORDS'] = equip.rotated_corners
+                
+
+                # Add the summary to the dataframe row
+                summary_string = ''
+                for key in summary:
+                    summary_string += key + ':' + str(summary[key]) + ' '
+
+                sorted_inventory.at[index,'Detalle de almacenamiento'] = summary_string
+        
+        return sorted_inventory
+
+
+
+
+
+    @staticmethod
     def sort_by_tetris(sorted_inventory):
 
         sorted_inventory["Detalle de almacenamiento"] = ''
@@ -65,14 +168,14 @@ class InventorySorter:
                 placeB_x_range = (0, 250)
                 valid_place = True
                 
-            case 'Pulmon 2':
+            case 'Pulmon 2ffffff':
                 placeA_model = 'Pulmon2A.joblib'
                 placeB_model = 'Pulmon2B.joblib'
                 placeA_x_range = (0, 220)
                 placeB_x_range = (0, 250)
                 valid_place = True
 
-            case 'Pulmon 3':
+            case 'Pulmon 3ffffff':
                 placeA_model = 'Pulmon3A.joblib'
                 placeB_model = 'Pulmon3B.joblib'
                 placeA_x_range = (0, 130)
@@ -80,6 +183,7 @@ class InventorySorter:
                 valid_place = True
 
             case _:
+                valid_place = False
                 pass
                 
         if(valid_place):
@@ -144,7 +248,7 @@ class InventorySorter:
                 case "SLOTS":
                     method = InventorySorter.optimize_slots
                 case "TETRIS":
-                    method = InventorySorter.sort_by_tetris
+                    method = InventorySorter.sort_by_tetris_slots
                 case _:
                     # Default case
                     method = InventorySorter.sort_by_group
@@ -180,7 +284,8 @@ class InventorySorter:
                 sorted_inv = sorting_methods[i](sorted_by_days_inv.copy(), warehouse)
 
             elif(sorting_tags[i] == 'TETRIS'):
-                sorted_inv = sorting_methods[i](sorted_by_days_inv.copy())
+                #sorted_inv = sorting_methods[i](sorted_by_days_inv.copy())
+                sorted_inv = sorting_methods[i](sorted_by_days_inv.copy(), 4.4)
 
             #else:
             #    sorted_inv = sorting_methods[i](external_inventory)

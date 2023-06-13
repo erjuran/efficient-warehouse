@@ -17,12 +17,17 @@ class PolyRegressor(BaseEstimator, RegressorMixin):
 
 
 class Polynomial:
-    def __init__(self, x_range, model_path):
+    def __init__(self, x_range, model_path, slot_size=0):
         # Load the model
         self.model = joblib.load(model_path)
         self.x_range = x_range
 
-        self.x_values = np.linspace(x_range[0], x_range[1], 100)
+        self.slot_size = slot_size
+        if(slot_size == 0):
+            self.x_values = np.linspace(x_range[0], x_range[1], 100)
+        else:
+            self.x_values = np.arange(x_range[0], x_range[1], slot_size)
+
         self.y_predictions = self.model.predict(self.x_values)
         self.y_range = (0, max(self.y_predictions))
         self.y_values = np.linspace(self.y_range[0], self.y_range[1], 100)

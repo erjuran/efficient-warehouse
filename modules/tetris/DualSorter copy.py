@@ -1,15 +1,14 @@
-import math
+
 
 class DualSorter:
 
-    def __init__(self, unlocated_recs, placeA, placeB, slot_size=0):
+    def __init__(self, unlocated_recs, placeA, placeB):
         self.unlocated_recs = unlocated_recs
         self.placeA_recs = []
         self.placeB_recs = []
         #self.place = single_place
         #self.model = single_place.model
 
-        self.slot_size = slot_size
         self.placeA = placeA
         self.placeB = placeB
         self.monitor = 119
@@ -37,16 +36,6 @@ class DualSorter:
 
             if(not located):
                 for x_patio in x_values:
-
-                    if(self.slot_size > 0):
-                        angle_radians = math.radians(-30) #TODO: Get angle as arg
-                        cosine = math.cos(angle_radians)
-
-                        x_delta = (y_values[1]-y_values[0])*cosine
-                    else:
-                        x_delta = 0
-                    
-                    x_patio += x_delta
 
                     fits = False
                     overlap = False
