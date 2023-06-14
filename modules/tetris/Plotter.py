@@ -64,7 +64,7 @@ class Plotter:
             # Calcular la pendiente a partir del ángulo
             pendiente = np.tan(angulo_rad)
 
-            for pos in np.arange(-88, x_range[1]+20, 4.4):
+            for pos in np.arange(-88, x_range[1]+10, 4.4):
                 ax.axline((pos, 0), slope=pendiente, color='gray', linestyle='-')
 
         for rectangle in rects:

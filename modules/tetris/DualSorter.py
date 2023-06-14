@@ -87,7 +87,7 @@ class DualSorter:
 
                 for x_patio in x_values:
 
-                    if(not added_delta):
+                    if(not added_delta and self.slot_size > 0):
 
                         # Ajustar coordenadas iniciales al primer carril más cercano
                         x_probable = left_corner[0] + x_delta
