@@ -24,6 +24,8 @@ class EfficientWarehouse:
 
         self.sorted_inventories = []
 
+
+
     def _format_data(self):
         """
         """
@@ -93,12 +95,35 @@ class EfficientWarehouse:
         # Add the 'Directo a planta records'
         self.sorted_inventories.append(unsorted_inv)
         self.sheet_names.append(no_sort_place)
+
+        # Add the stats
+        self.sorted_inventories.append(self._format_stats())
+        self.sheet_names.append("Estadisticas")
+
         return self.sorted_inventories, self.sheet_names
+    
+    def _format_stats(self):
+        column_names = ['Sitio','Total Equipos por asignar (A y B)','Total Equipos NO asignados (A y B)','Tetris: Equipos asignados','Tetris: Área asignada','Slot: Equipos asignados','Slot: Área asignada']
+        stats = pd.DataFrame(columns=column_names)
+
+        stat_dic = InventorySorter.stats
+        for key in stat_dic:
+            stat = {'Sitio': key}
+            for field in stat_dic[key]:
+                stat[field] = stat_dic[key][field]
+            
+            stats = pd.concat([stats, pd.DataFrame([stat])], ignore_index=True)
+        
+        #print(stats)
+        return stats
     
     def generate_sorted_inventories(self, output_inv_filename, output_warehouse_filename):
         """
         """
         sorted_inventories, sheet_names = self.sort_inventories()
+
+        # Check stats
+        print(InventorySorter.stats)
 
         self.excel_interface.export_multiple_inventories("outputs/"+output_inv_filename,sorted_inventories,sheet_names)
         self.excel_interface.export_inventory("outputs/"+output_warehouse_filename,self.warehouses)

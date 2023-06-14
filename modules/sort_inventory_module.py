@@ -13,6 +13,10 @@ class InventorySorter:
     #sort_types = ['GROUP','DAYS']
     opt_style = "storage-days"
 
+    #column_names = ['Sitio','Tetris: Equipos asignados','Tetris: Área asignada','Slots: Equipos asignados','Slots: Área asignada']
+    #stats = pd.DataFrame(columns=column_names)
+    stats = {'Pulmon 1A':{},'Pulmon 1B':{},'Pulmon 2A':{},'Pulmon 2B':{},'Pulmon 3A':{},'Pulmon 3B':{}}
+
     @staticmethod
     def sort_by_group(external_inventory):
         """
@@ -92,11 +96,24 @@ class InventorySorter:
             placeA_recs, placeB_recs = sorter.locate_rects()
 
             if(slot_size>0): 
-                mode='idealslot' 
+                mode='Slot' 
                 grid = True
             else: 
-                mode='tetris'
+                mode='Tetris'
                 grid = False
+            
+             # Guardar las estadisticas
+            InventorySorter.stats[place + 'A']['Total Equipos por asignar (A y B)'] = len(unlocated_recs)
+            InventorySorter.stats[place + 'A']['Total Equipos NO asignados (A y B)'] = len(unlocated_recs) - (len(placeA_recs) + len(placeB_recs))
+            InventorySorter.stats[place + 'A'][mode + ': Equipos asignados'] = len(placeA_recs)
+            InventorySorter.stats[place + 'A'][mode + ': Área asignada'] = str((InventorySorter._get_rects_area(placeA_recs)/placeA.area)*100)+' %'
+
+            InventorySorter.stats[place + 'B']['Total Equipos por asignar (A y B)'] = len(unlocated_recs)
+            InventorySorter.stats[place + 'B']['Total Equipos NO asignados (A y B)'] = len(unlocated_recs) - (len(placeA_recs) + len(placeB_recs))
+            InventorySorter.stats[place + 'B'][mode + ': Equipos asignados'] = len(placeB_recs)
+            InventorySorter.stats[place + 'B'][mode + ': Área asignada'] = str((InventorySorter._get_rects_area(placeB_recs)/placeB.area)*100)+' %'
+
+            # FALTA HACER FUNCION PARA CALCULAR AREA DE LOS RECTANGULOS
 
             Plotter.save_model_rectangles(placeA.model, placeA_x_range, placeA_recs, place + "A", "outputs/" + mode + "/" + mode + place + "A.png", grid)
             Plotter.save_model_rectangles(placeB.model, placeB_x_range, placeB_recs, place + "B", "outputs/" + mode + "/" + mode + place + "B.png", grid)
@@ -136,6 +153,15 @@ class InventorySorter:
                 sorted_inventory.at[index,'Detalle de almacenamiento'] = summary_string
         
         return sorted_inventory
+    
+    @staticmethod
+    def _get_rects_area(rects):
+        total_area = 0
+        for rect in rects:
+            rect_area = rect.width * rect.height
+            total_area += rect_area
+        
+        return total_area
 
     @staticmethod
     def _compare_slot_size(slot, equip_summary, index, sorted_inventory, located_equips, empty_slot):

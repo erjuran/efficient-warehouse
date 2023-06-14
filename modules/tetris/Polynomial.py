@@ -1,6 +1,7 @@
 import joblib
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin
+from scipy.integrate import quad
 
 # Define a custom estimator class that wraps numpy.poly1d
 class PolyRegressor(BaseEstimator, RegressorMixin):
@@ -31,6 +32,12 @@ class Polynomial:
         self.y_predictions = self.model.predict(self.x_values)
         self.y_range = (0, max(self.y_predictions))
         self.y_values = np.linspace(self.y_range[0], self.y_range[1], 100)
+        self.area = self._get_area()
+    
+    def _get_area(self):
+        polinomio = self.model.predict
+        area, error = quad(polinomio, self.x_range[0], self.x_range[1])
+        return area
 
 
 
