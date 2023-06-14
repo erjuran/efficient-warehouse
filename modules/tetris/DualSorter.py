@@ -1,4 +1,5 @@
 import math
+import numpy as np
 
 class DualSorter:
 
@@ -33,21 +34,71 @@ class DualSorter:
         return True
     
     def _assign_coords(self,index, place, x_values, y_values, rect, located_recs, located=False):
+        
+        #if(index == self.monitor): print(x_values)
+        '''
+        if(self.slot_size > 0):
+            
+            # Ángulo en grados
+            angulo = 60
+
+            # Convertir el ángulo a radianes
+            angulo_rad = np.deg2rad(angulo)
+
+            # Calcular la pendiente a partir del ángulo
+            pendiente = np.tan(angulo_rad)
+
+            corners = rect.rotated_corners
+            left_corner = corners[0]
+            
+            #x_init = self._move_point_to_align(left_corner[0], self.slot_size)
+            x_delta = left_corner[1]/pendiente
+
+        else:
+            x_delta = 0
+        
+        '''
+        
         for y_patio in y_values:
 
+            if(self.slot_size > 0):
+            
+                # Ángulo en grados
+                angulo = 60
+
+                # Convertir el ángulo a radianes
+                angulo_rad = np.deg2rad(angulo)
+
+                # Calcular la pendiente a partir del ángulo
+                pendiente = np.tan(angulo_rad)
+
+                corners = rect.rotated_corners
+                left_corner = corners[0]
+                
+                #x_init = self._move_point_to_align(left_corner[0], self.slot_size)
+                x_delta = left_corner[1]/pendiente
+
+            else:
+                x_delta = 0
+
+            '''
+            if(self.slot_size > 0):
+                #x_delta = y_patio/pendiente
+                x_delta = 0
+            else:
+                x_delta = 0
+            '''
+
             if(not located):
+
+                added_delta=False
+
                 for x_patio in x_values:
 
-                    if(self.slot_size > 0):
-                        angle_radians = math.radians(-30) #TODO: Get angle as arg
-                        cosine = math.cos(angle_radians)
-
-                        x_delta = (y_values[1]-y_values[0])*cosine
-                    else:
-                        x_delta = 0
+                    if(not added_delta):
+                        rect.update_coords(x_delta,0)
+                        added_delta = True
                     
-                    x_patio += x_delta
-
                     fits = False
                     overlap = False
 
@@ -83,13 +134,20 @@ class DualSorter:
                             #unlocated_recs.remove(rect)
                             break
                         else:
-                            x_diff = abs(x_patio - left_corner[0])
+                            
+                            if(self.slot_size > 0):
+                                x_diff = self.slot_size
+                            else:
+                                x_diff = abs(x_patio - left_corner[0])
                             # Move the X coordinates a bit a try again
                             rect.update_coords(x_diff,0)
                             #print(f'Rect {index}: Updating coords')
 
                     else:
-                        x_diff = abs(x_patio - left_corner[0])
+                        if(self.slot_size > 0):
+                            x_diff = self.slot_size
+                        else:
+                            x_diff = abs(x_patio - left_corner[0])
                         # Move the X coordinates a bit a try again
                         rect.update_coords(x_diff,0)
                         #print(f'Rect {index}: Updating coords')
@@ -142,9 +200,9 @@ class DualSorter:
                 else: # Place B
                     located = self._assign_coords(index, self.placeA, placeA_x_values, placeA_y_values, rect, self.placeA_recs)
 
-                if(index == self.monitor):
-                    print(f'PLACE A-Y:{placeA_y_values}')
-                    print(f'PLACE B-Y:{placeB_y_values}')
+                #if(index == self.monitor):
+                #    print(f'PLACE A-Y:{placeA_y_values}')
+                #    print(f'PLACE B-Y:{placeB_y_values}')
 
             if(index == self.monitor): 
                 print(f'LAST: {rect.rotated_corners}, WIDTH:{rect.width}, HEIGHT:{rect.height}')
@@ -155,3 +213,9 @@ class DualSorter:
         print(f'Patio A {len(self.placeA_recs)}')
         print(f'Patio B {len(self.placeB_recs)}')
         return self.placeA_recs, self.placeB_recs
+    
+    def _move_point_to_align(self,point_x, line_spacing):
+        #line_spacing = 4.4
+        closest_line_x = round(point_x / line_spacing) * line_spacing
+        difference = closest_line_x - point_x
+        return difference

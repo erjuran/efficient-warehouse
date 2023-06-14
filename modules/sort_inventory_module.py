@@ -8,7 +8,8 @@ from .tetris.Polynomial import Polynomial, PolyRegressor
 class InventorySorter:
     """
     """
-    sort_types = ['GROUP','DAYS','SLOTS','TETRIS']
+    #sort_types = ['GROUP','DAYS','SLOTS','TETRIS']
+    sort_types = ['DAYS','TETRIS']
     #sort_types = ['GROUP','DAYS']
     opt_style = "storage-days"
 
