@@ -66,14 +66,14 @@ class InventorySorter:
                 placeB_x_range = (0, 250)
                 valid_place = True
                 
-            case 'Pulmon 2ffffff':
+            case 'Pulmon 2':
                 placeA_model = 'Pulmon2A.joblib'
                 placeB_model = 'Pulmon2B.joblib'
                 placeA_x_range = (0, 220)
                 placeB_x_range = (0, 250)
                 valid_place = True
 
-            case 'Pulmon 3ffffff':
+            case 'Pulmon 3':
                 placeA_model = 'Pulmon3A.joblib'
                 placeB_model = 'Pulmon3B.joblib'
                 placeA_x_range = (0, 130)

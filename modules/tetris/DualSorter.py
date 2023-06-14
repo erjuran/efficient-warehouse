@@ -81,14 +81,6 @@ class DualSorter:
             else:
                 x_delta = 0
 
-            '''
-            if(self.slot_size > 0):
-                #x_delta = y_patio/pendiente
-                x_delta = 0
-            else:
-                x_delta = 0
-            '''
-
             if(not located):
 
                 added_delta=False
@@ -96,7 +88,17 @@ class DualSorter:
                 for x_patio in x_values:
 
                     if(not added_delta):
-                        rect.update_coords(x_delta,0)
+
+                        # Ajustar coordenadas iniciales al primer carril más cercano
+                        x_probable = left_corner[0] + x_delta
+                        for x_resta in x_values:
+                            if(x_probable - x_resta < 0):
+                                break
+                            else:
+                                x_probable -= x_resta
+
+                        #rect.update_coords(x_delta,0)
+                        rect.update_coords(x_probable, 0)
                         added_delta = True
                     
                     fits = False
