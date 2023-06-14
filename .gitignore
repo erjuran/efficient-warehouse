@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 
 # Excel files
-*.xlsx
+
 
 # C extensions
 *.so
